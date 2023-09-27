@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import messagebox
 from player import Player
 from comp_player import CompPlayer
-from tools import PlayerStep, GenerateShipsException, ShootingWithoutThinkingException
+from tools import PlayerStep, GenerateShipsException, ShootingWithoutThinkingException, ShotOnBoardException
 import time
 
 
@@ -46,16 +46,25 @@ class MainWindow(Tk):
                          x=(self._area1[2] + self._area1[0] - self._btn1.winfo_width()) // 2)
         self._btn2.place(y=self._area2[3] + self._area2[1] + self._btn1.winfo_height() // 2,
                          x=(self._area2[2] + self._area2[0] - self._btn2.winfo_width()) // 2)
-        self._canvas.bind_all("<Button-1>", self.cnv_onclick)
         self._player = Player(MainWindow.AREA_NUM_CELLS)
         self._comp_player = CompPlayer(MainWindow.AREA_NUM_CELLS)
         self.btn_onstart()
 
     def btn_onstart(self):
+        self._canvas.bind_all("<Button-1>", self.cnv_onclick)
         self._remove_ships()
         self.__draw_areas()
         try:
             self._player.generate_ships()
+
+            for ship in self._player.board.ships:
+                if 0 < len(ship.cells) < 4:
+                    for cell in ship.cells:
+                        self._player.board.shot(cell // 10, cell % 10)
+                        self._mark_cell(PlayerStep.COMPUTER, True,cell // 10, cell % 10)
+
+
+
         except GenerateShipsException as e:
             print("Exception has occurred! \n К сожалению игра сломалась!")
             self.quit()
@@ -182,14 +191,23 @@ class MainWindow(Tk):
         self.update()
         _win, _msg = self._player.check_win(self._comp_player.board)
         if _hit or _win:
+            if _win:
+                self._canvas.unbind_all("<Button-1>")
+                messagebox.showinfo(title='Морской бой', message=_msg)
             return
         self._canvas.unbind_all("<Button-1>")
         while True:
             time.sleep(0.5)
             _hit, _row, _col = self._comp_player.make_step(self._player.board)
-            self._mark_cell(PlayerStep.COMPUTER, _hit, _row, _col)
+            try:
+                self._mark_cell(PlayerStep.COMPUTER, _hit, _row, _col)
+            except ShotOnBoardException as ex:
+                messagebox.showinfo(title='Морской бой', message=str(ex))
             self.update()
+            _win, _msg = self._comp_player.check_win(self._player.board)
+            if _win:
+                messagebox.showinfo(title='Морской бой', message=_msg)
+                return
             if not _hit:
                 break
         self._canvas.bind_all("<Button-1>", self.cnv_onclick)
-        _win, _msg = self._comp_player.check_win(self._player.board)

@@ -29,3 +29,7 @@ class GenerateShipsException(ThisGameException):
 class ShootingWithoutThinkingException(ThisGameException):
     def __init__(self, msg):
         super().__init__(msg)
+
+class ShotOnBoardException(ThisGameException):
+    def __init__(self, msg):
+        super().__init__(msg)

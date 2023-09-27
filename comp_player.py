@@ -1,6 +1,6 @@
 from player import Player
 import random
-
+from tools import ShotOnBoardException
 
 class CompPlayer(Player):
     def __init__(self, num_cells):
@@ -35,26 +35,22 @@ class CompPlayer(Player):
 
     @staticmethod
     def ai_player_step(func):
-        __hit = False
-        __cells = []
         def wrapper(self, enemy_board):
-            nonlocal __hit, __cells
-            __next_idx = -1
-            if __hit:
-                __next_idx = self.__get_next_step(__cells, enemy_board)
-                print(__cells, __next_idx)
-            __hit, __row, __col = func(self, enemy_board, __next_idx)
-            if __hit:
-                __cells.append(__row * self.board.num_board_cells + __col)
-            else:
-                __cells.clear()
-            return __hit, __row, __col
+            __ships = enemy_board.get_ships_wounded()
+            if len(__ships):
+                __ship = random.choice(__ships)
+                __next_idx = self.__get_next_step(__ship, enemy_board)
+                return func(self, enemy_board, __next_idx)
+            return func(self, enemy_board)
         return wrapper
 
     @ai_player_step
     def make_step(self, enemy_board, _cell_idx=-1):
         if _cell_idx == -1:
-            _cell_idx = random.choice(enemy_board.get_board_cells(-1))
+            _bcells = enemy_board.get_board_cells(-1)
+            if not len(_bcells):
+                raise ShotOnBoardException('Нет пустых ячеек для стрельбы по кораблям')
+            _cell_idx = random.choice(_bcells)
         _row = _cell_idx // enemy_board.num_board_cells
         _col = _cell_idx % enemy_board.num_board_cells
         hit = enemy_board.shot(_row, _col)

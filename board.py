@@ -59,10 +59,18 @@ class Board:
     def is_area_ship_died(self, cell_idx):
         for ship in self._ships:
             area_cells = self.get_ship_area(ship)
-            print(ship, ship.is_ship_died())
             if ship.is_ship_died() and cell_idx in area_cells:
                 return True
         return False
+
+    def get_ships_wounded(self):
+        __ships = []
+        for ship in self._ships:
+            if not ship.is_ship_died():
+                __ship_cells = ship.get_cells(CellState.HIT)
+                if len(__ship_cells)>0:
+                    __ships.append(__ship_cells)
+        return __ships
 
     @property
     def empty_board_cells(self):
