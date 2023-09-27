@@ -56,15 +56,6 @@ class MainWindow(Tk):
         self.__draw_areas()
         try:
             self._player.generate_ships()
-
-            for ship in self._player.board.ships:
-                if 0 < len(ship.cells) < 4:
-                    for cell in ship.cells:
-                        self._player.board.shot(cell // 10, cell % 10)
-                        self._mark_cell(PlayerStep.COMPUTER, True,cell // 10, cell % 10)
-
-
-
         except GenerateShipsException as e:
             print("Exception has occurred! \n К сожалению игра сломалась!")
             self.quit()
